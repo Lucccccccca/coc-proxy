@@ -1,30 +1,43 @@
 const express = require("express");
 const fetch = require("node-fetch");
+require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT || 8080;
-const API_KEY = process.env.COC_API_KEY?.trim(); // Entfernt unnötige Leerzeichen & Zeilenumbrüche
+const PORT = process.env.PORT || 3000;
+const API_KEY = process.env.COC_API_KEY; // API-Key aus .env Datei
 
+app.use(express.json());
+
+// Clan-Daten abrufen
 app.get("/clan/:tag", async (req, res) => {
-    const clanTag = req.params.tag.replace("#", "%23");
-
     try {
+        const clanTag = encodeURIComponent(req.params.tag); // FIXED: %23 für #
+
         console.log(`🔍 Anfrage an Clash of Clans API: https://api.clashofclans.com/v1/clans/${clanTag}`);
-        console.log(`🛠️ API-Key: Bearer ${API_KEY}`); // Debugging
 
         const response = await fetch(`https://api.clashofclans.com/v1/clans/${clanTag}`, {
-            headers: { 
-                "Authorization": `Bearer ${API_KEY.trim()}` // Entfernt mögliche Zeilenumbrüche
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${API_KEY}`,
+                "Accept": "application/json"
             }
         });
 
         const data = await response.json();
-        console.log(`✅ API Antwort:`, data);
+
+        if (!response.ok) {
+            console.error("❌ API-Fehler:", data);
+            return res.status(response.status).json({ error: "Fehler beim Abrufen der Clan-Daten", details: data });
+        }
+
         res.json(data);
-    } catch (error) {
-        console.error("❌ Fehler:", error);
-        res.status(500).json({ error: "Fehler beim Abrufen der Clan-Daten", details: error.toString() });
+    } catch (err) {
+        console.error("❌ Server-Fehler:", err);
+        res.status(500).json({ error: "Interner Server-Fehler" });
     }
 });
 
-app.listen(PORT, () => console.log(`✅ Proxy läuft auf Port ${PORT}`));
+// Server starten
+app.listen(PORT, () => {
+    console.log(`✅ Server läuft auf Port ${PORT}`);
+});
