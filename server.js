@@ -3,24 +3,24 @@ import fetch from "node-fetch";
 import dotenv from "dotenv";
 
 dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Middleware für JSON
-app.use(express.json());
+app.get("/", (req, res) => {
+    res.send("Clash of Clans Proxy API läuft!");
+});
 
-// Clan-Daten abrufen
 app.get("/clan/:tag", async (req, res) => {
-    const clanTag = req.params.tag.startsWith("#") ? req.params.tag : `#${req.params.tag}`;
-    const API_KEY = process.env.COC_API_KEY;
+    const clanTag = req.params.tag.replace("#", "%23");
+    const apiUrl = `https://api.clashofclans.com/v1/clans/${clanTag}`;
+
+    console.log(`🔍 Anfrage an Clash of Clans API: ${apiUrl}`);
 
     try {
-        console.log(`🔍 Anfrage an Clash of Clans API: https://api.clashofclans.com/v1/clans/${encodeURIComponent(clanTag)}`);
-
-        const response = await fetch(`https://api.clashofclans.com/v1/clans/${encodeURIComponent(clanTag)}`, {
-            method: "GET",
+        const response = await fetch(apiUrl, {
             headers: {
-                "Authorization": `Bearer ${API_KEY}`,
+                "Authorization": `Bearer ${process.env.COC_API_KEY}`,
                 "Accept": "application/json"
             }
         });
@@ -33,12 +33,11 @@ app.get("/clan/:tag", async (req, res) => {
         const data = await response.json();
         res.json(data);
     } catch (error) {
-        console.error("❌ API-Fehler:", error);
-        res.status(500).json({ error: "Interner Server-Fehler", details: error.message });
+        console.error("❌ Fehler:", error);
+        res.status(500).json({ error: "Server-Fehler", details: error.message });
     }
 });
 
-// Server starten
 app.listen(PORT, () => {
     console.log(`🚀 Proxy läuft auf Port ${PORT}`);
 });
