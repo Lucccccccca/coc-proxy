@@ -1,13 +1,13 @@
 {
-  "name": "coc-proxy",
+  "name": "clashofclans-tool",
   "version": "1.0.0",
-  "description": "Proxy für Clash of Clans API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "node-fetch": "^2.6.7"
+    "node-fetch": "^3.3.2"
   }
 }
