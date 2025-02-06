@@ -1,39 +1,39 @@
 import express from "express";
-import fetch from "node-fetch";
 import dotenv from "dotenv";
+import fetch from "node-fetch";
 
-dotenv.config();
+dotenv.config(); // Lädt Umgebungsvariablen aus der .env-Datei
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-app.get("/", (req, res) => {
-    res.send("Clash of Clans Proxy API läuft!");
-});
+app.use(express.json());
 
-app.get("/clan/:tag", async (req, res) => {
-    const clanTag = req.params.tag.replace("#", "%23");
-    const apiUrl = `https://api.clashofclans.com/v1/clans/${clanTag}`;
-
-    console.log(`🔍 Anfrage an Clash of Clans API: ${apiUrl}`);
-
+// 🏆 Route für Clash of Clans API
+app.get("/clan/:clanTag", async (req, res) => {
     try {
-        const response = await fetch(apiUrl, {
+        let clanTag = req.params.clanTag.replace("#", "%23"); // Hashtag (#) für URL kodieren
+
+        console.log(`🔍 Anfrage an Clash of Clans API: https://api.clashofclans.com/v1/clans/${clanTag}`);
+
+        const response = await fetch(`https://api.clashofclans.com/v1/clans/${clanTag}`, {
+            method: "GET",
             headers: {
-                "Authorization": `Bearer ${process.env.COC_API_KEY}`,
-                "Accept": "application/json"
+                "Authorization": `Bearer ${process.env.API_KEY}`.trim(), // Trim entfernt Leerzeichen/Zeilenumbrüche
+                "Content-Type": "application/json"
             }
         });
 
         if (!response.ok) {
             const errorData = await response.json();
-            return res.status(response.status).json({ error: "Fehler beim Abrufen der Clan-Daten", details: errorData });
+            console.error("❌ Fehler von Clash of Clans API:", errorData);
+            return res.status(response.status).json(errorData);
         }
 
         const data = await response.json();
         res.json(data);
     } catch (error) {
-        console.error("❌ Fehler:", error);
+        console.error("❌ Server-Fehler:", error);
         res.status(500).json({ error: "Server-Fehler", details: error.message });
     }
 });
