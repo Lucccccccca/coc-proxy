@@ -3,18 +3,21 @@ const fetch = require("node-fetch");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-const API_KEY = process.env.COC_API_KEY; // Clash of Clans API Key aus Render Variables
+const API_KEY = process.env.COC_API_KEY; // Clash of Clans API Key
 
 app.get("/clan/:tag", async (req, res) => {
     const clanTag = req.params.tag.replace("#", "%23");
     try {
+        console.log(`🔍 Anfrage an Clash of Clans API: https://api.clashofclans.com/v1/clans/${clanTag}`);
         const response = await fetch(`https://api.clashofclans.com/v1/clans/${clanTag}`, {
             headers: { Authorization: `Bearer ${API_KEY}` }
         });
         const data = await response.json();
+        console.log(`✅ API Antwort:`, data);
         res.json(data);
     } catch (error) {
-        res.status(500).json({ error: "Fehler beim Abrufen der Clan-Daten" });
+        console.error("❌ Fehler:", error);
+        res.status(500).json({ error: "Fehler beim Abrufen der Clan-Daten", details: error.toString() });
     }
 });
 
